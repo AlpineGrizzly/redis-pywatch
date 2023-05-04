@@ -60,8 +60,16 @@ def redis_connect(ip, port, db):
         sys.exit(1)
 
 def event_handler(msg):
+    global g_event, g_command, g_key
     if msg['type'] == 'pmessage':
-        print("%s" % msg['data'])
+        if not g_event:
+            g_event = 1                         # Received our first event, COMMAND
+            g_command = msg['data'].decode("utf-8")
+        else:
+            g_event = 0                         # Received second event, KEY
+            g_key = msg['data'].decode("utf-8")
+            print("%s %s" % (g_command, g_key)) # Print to stdout
+            g_command = g_key = ""              
 
 def set_shutdown(debug):
     """
@@ -95,9 +103,10 @@ def signal_handler(signum, frame):
             set_shutdown("SIGPIPE")
 
 def main():
-    global g_shutdown, g_debug
+    global g_shutdown, g_debug, g_event
     g_shutdown = 0 # Determines if we should shut down program 
     g_debug = 0    # Enables debug prints to console
+    g_event = 0    # Keeps track of our command and key as they come in 
     
     parser = argparse.ArgumentParser(description="Wait for a key to appear in Redis", add_help=False)
     args = getargs(parser)
@@ -122,7 +131,7 @@ def main():
     while not g_shutdown: # Main thread will poll for a shutdown
         continue
 
-    thread.stop() # Merc the child thread
+    thread.stop() # Merc the thread
 
 if __name__ == "__main__":
     main()
