@@ -1,4 +1,5 @@
 # redis-pywatch
+Python implementation of https://github.com/Fullaxx/rediswatch
 Prints events occurring within Redis to stdout
 
 ## TODO
